@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut, ChevronRight, ChevronLeft } from "lucide-react";
+import { Menu, X, LogOut, ChevronRight } from "lucide-react";
 import "./styles.scss";
 import StoreProvider from "@/store/provider";
 import { fetchUserProfile } from "@/store/slices/profile";
