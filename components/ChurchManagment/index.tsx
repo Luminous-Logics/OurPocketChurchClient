@@ -169,6 +169,14 @@ const ChurchComp = () => {
     [userProfile?.user.user_type]
   );
 
+  // Check if user has permission to manage parishes
+  const canManageParishes = useMemo(
+    () => userProfile?.permissions?.some(
+      (permission: any) => permission.permission_code === "MANAGE_PARISHES"
+    ),
+    [userProfile?.permissions]
+  );
+
   // Memoized stats calculation
   const stats = useMemo<StatItem[]>(() => {
     const total = parishesList?.length || 0;
@@ -303,13 +311,15 @@ const ChurchComp = () => {
           <h1>Church Management</h1>
           <p>Manage parish registrations and approve new church requests</p>
         </div>
-        <Button
-          variant="primary"
-          icon={<Plus size={16} />}
-          onClick={handleOpenCreateModal}
-        >
-          Add Church
-        </Button>
+        {canManageParishes && (
+          <Button
+            variant="primary"
+            icon={<Plus size={16} />}
+            onClick={handleOpenCreateModal}
+          >
+            Add Church
+          </Button>
+        )}
       </div>
 
       {/* Modal */}
