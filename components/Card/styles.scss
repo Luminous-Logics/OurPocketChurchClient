@@ -1,0 +1,46 @@
+.card {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  color: var(--card-foreground);
+  box-shadow: 0 2px 8px -2px hsl(228, 45%, 15%, 0.08);
+  transition: all 0.3s;
+
+  &:hover {
+    box-shadow: 0 4px 20px -4px hsl(229, 70%, 54%, 0.15);
+  }
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1.5rem;
+
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin: 0;
+    color: var(--foreground);
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin: 0;
+  }
+}
+
+.card-content {
+  padding: 1.5rem;
+  padding-top: 0;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  padding-top: 0;
+}

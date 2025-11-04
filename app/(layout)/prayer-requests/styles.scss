@@ -1,0 +1,497 @@
+.prayer-requests-page-content {
+  padding: 32px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: var(--foreground);
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    color: var(--muted-foreground);
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.prayer-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.prayer-tab {
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  margin-bottom: -1px;
+
+  &:hover {
+    color: var(--foreground);
+  }
+
+  &.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+}
+
+.prayer-requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.prayer-request-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.prayer-request-header {
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.prayer-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: hsl(229, 70%, 54%, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.prayer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.prayer-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+}
+
+.prayer-requester {
+  font-size: 13px;
+  color: var(--muted-foreground);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.prayer-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.action-button {
+  height: 2.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--muted);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.approve {
+    &:hover:not(:disabled) {
+      background: var(--success);
+      color: white;
+      border-color: var(--success);
+    }
+  }
+
+  &.close {
+    &:hover:not(:disabled) {
+      background: var(--danger);
+      color: white;
+      border-color: var(--danger);
+    }
+  }
+}
+
+.prayer-request-body {
+  padding: 0 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prayer-description {
+  font-size: 14px;
+  color: var(--foreground);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.prayer-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prayer-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.loading-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+
+  p {
+    margin: 0;
+  }
+}
+
+.no-results {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+
+  p {
+    margin: 0;
+  }
+}
+
+.prayer-notes {
+  padding: 12px;
+  background: var(--muted);
+  border-radius: 0.5rem;
+  font-size: 13px;
+  color: var(--foreground);
+  line-height: 1.5;
+
+  strong {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+}
+
+// Modal Styles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.modal-content {
+  background: var(--card);
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 540px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-header {
+  padding: 24px 24px 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--foreground);
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    font-size: 13px;
+    color: var(--muted-foreground);
+    margin: 0;
+  }
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+
+    .required {
+      color: var(--danger);
+    }
+  }
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  font-size: 14px;
+  color: var(--foreground);
+  background: var(--card);
+  transition: all 0.2s;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px hsl(229, 70%, 54%, 0.1);
+  }
+
+  &::placeholder {
+    color: var(--muted-foreground);
+  }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+.form-group-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--border);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    accent-color: var(--primary);
+  }
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+    cursor: pointer;
+    margin: 0;
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: var(--background);
+}
+
+.btn-cancel,
+.btn-submit {
+  padding: 10px 20px;
+  border-radius: 0.5rem;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  font-family: inherit;
+}
+
+.btn-cancel {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--foreground);
+
+  &:hover {
+    background: var(--muted);
+  }
+}
+
+.btn-submit {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+
+  &:hover {
+    background: var(--primary-hover);
+  }
+}
+
+@media (max-width: 768px) {
+  .prayer-requests-page-content {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+
+    h1 {
+      font-size: 24px;
+    }
+  }
+
+  .prayer-request-header {
+    flex-wrap: wrap;
+  }
+
+  .prayer-actions {
+    width: 100%;
+    flex-direction: column;
+
+    .action-button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modal-header {
+    padding: 20px 16px 16px 16px;
+  }
+
+  .modal-body {
+    padding: 20px 16px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+    flex-direction: column;
+
+    .btn-cancel,
+    .btn-submit {
+      width: 100%;
+    }
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
