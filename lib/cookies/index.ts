@@ -8,7 +8,9 @@ export function getAccessToken() {
 
 export function setAccessToken(token: string, expiresInSeconds?: number) {
   cookies().set(ACCESS_TOKEN_KEY, token, {
-    httpOnly: true,
+    httpOnly: false, // Allow JavaScript to read the cookie
+    secure: true, // Only send over HTTPS
+    sameSite: 'strict', // CSRF protection
     maxAge: expiresInSeconds,
   });
 }
