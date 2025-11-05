@@ -172,7 +172,7 @@ const ChurchComp = () => {
   // Check if user has permission to manage parishes
   const canManageParishes = useMemo(
     () => userProfile?.permissions?.some(
-      (permission: any) => permission.permission_code === "MANAGE_PARISHES"
+      (permission: any) => permission.permission_code === "CREATE_PARISH"
     ),
     [userProfile?.permissions]
   );
