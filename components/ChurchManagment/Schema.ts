@@ -15,7 +15,17 @@ export const defaultValues: CreateChurchFormType = {
   established_date: undefined,
   patron_saint: undefined,
   timezone: { label: "America/Chicago", value: "America/Chicago" },
-  subscription_plan: { label: "Basic", value: "basic" },
+  plan_id: undefined,
+  billing_cycle: "monthly",
+  subscription_expiry: undefined,
+  billing_name: "",
+  billing_email: "",
+  billing_phone: "",
+  billing_address: "",
+  billing_city: "",
+  billing_state: "",
+  billing_pincode: "",
+  billing_country: "IN",
   admin_email: undefined,
   admin_password: undefined,
   admin_first_name: undefined,
@@ -42,17 +52,23 @@ export const createChurchSchema = z
     established_date: z.string().optional(),
     patron_saint: z.string().optional(),
     timezone: z.optional(dropDownSchemaOpt),
-    subscription_plan: z.optional(
-      z.object({
-        label: z.string(),
-        value: z.enum(["free", "basic", "premium", "enterprise"]),
-      })
-    ),
+    plan_id: z.number().optional(),
+    billing_cycle: z.enum(["monthly", "yearly"]),
     subscription_expiry: z.string().optional(),
+    billing_name: z.string().min(1, "Billing name is required"),
+    billing_email: z.string().email("Valid billing email is required"),
+    billing_phone: z.string().min(1, "Billing phone is required"),
+    billing_address: z.string().min(1, "Billing address is required"),
+    billing_city: z.string().min(1, "City is required"),
+    billing_state: z.string().min(1, "State is required"),
+    billing_pincode: z.string()
+      .min(1, "Pincode is required")
+      .regex(/^\d{6}$/, "Pincode must be exactly 6 digits"),
+    billing_country: z.string().min(1, "Country is required"),
     admin_email: z.string().email("Invalid email address").optional(),
     admin_password: z
       .string()
-      .min(8, "Admin Password must be at least 8 characters long")
+      .min(6, "Admin Password must be at least 6 characters long")
       .optional(),
     admin_first_name: z.string().optional(),
     admin_last_name: z.string().optional(),
@@ -144,8 +160,17 @@ export interface CreateChurchRequestBody {
   established_date?: string;
   patron_saint?: string;
   timezone?: string;
-  subscription_plan?: string;
+  plan_id?: number;
+  billing_cycle?: "monthly" | "yearly";
   subscription_expiry?: string;
+  billing_name?: string;
+  billing_email?: string;
+  billing_phone?: string;
+  billing_address?: string;
+  billing_city?: string;
+  billing_state?: string;
+  billing_pincode?: string;
+  billing_country?: string;
   admin_email?: string;
   admin_password?: string;
   admin_first_name?: string;
@@ -153,4 +178,5 @@ export interface CreateChurchRequestBody {
   admin_phone?: string;
   admin_role?: string;
   admin_department?: string;
+  payment_method?: string;
 }

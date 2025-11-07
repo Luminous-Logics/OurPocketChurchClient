@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactModal from "react-modal";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +10,9 @@ import InputText from "../InputComponents/InputText";
 import InputDropDown from "../InputComponents/InputDropDown";
 import InputDatePicker from "../InputComponents/InputDatePicker";
 import InputPhone from "../InputComponents/InputPhone";
+import toaster from "@/lib/toastify";
+import { httpServerGet, promiseTracker } from "@/lib/api";
+import { SubscriptionPlan, SubscriptionPlansResponse } from "@/types";
 import "./styles.scss";
 import {
   CreateChurchFormType,
@@ -35,13 +39,6 @@ const timezoneOptions = [
   // Add more timezone options as needed
 ];
 
-const subscriptionPlanOptions: { label: string; value: "free" | "basic" | "premium" | "enterprise" }[] = [
-  { label: "Free", value: "free" },
-  { label: "Basic", value: "basic" },
-  { label: "Premium", value: "premium" },
-  { label: "Enterprise", value: "enterprise" },
-];
-
 const CreateChurchModal: React.FC<CreateChurchModalProps> = ({
   isOpen,
   onClose,
@@ -50,16 +47,48 @@ const CreateChurchModal: React.FC<CreateChurchModalProps> = ({
   isEditMode = false,
   initialValues,
 }) => {
-  const baseSteps = ["Basic Info", "Address", "Subscription", "Admin User"];
+  const baseSteps = ["Basic Info", "Address", "Subscription", "Billing Info", "Admin User"];
   const steps = isEditMode
     ? baseSteps.filter((step) => step !== "Admin User")
     : baseSteps;
 
   const [currentStep, setCurrentStep] = useState(0);
+  const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+
   const hookForm = useForm<CreateChurchFormType>({
     resolver: zodResolver(createChurchSchema),
     defaultValues: defaultValues,
   });
+
+
+  useEffect(() => {
+    hookForm.setValue("billing_country","IN")
+  }, [])
+  
+
+  // Fetch subscription plans
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const resp = await promiseTracker(
+          httpServerGet<SubscriptionPlansResponse>("/subscriptions/plans")
+        );
+
+        if (resp.data) {
+          if (Array.isArray(resp.data)) {
+            setSubscriptionPlans(resp.data);
+          } else if ((resp.data as any).data) {
+            setSubscriptionPlans((resp.data as any).data);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching subscription plans:", error);
+        toaster.error("Failed to load subscription plans");
+      }
+    };
+    fetchPlans();
+  }, []);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -70,9 +99,15 @@ const CreateChurchModal: React.FC<CreateChurchModalProps> = ({
           timezone: initialValues.timezone
             ? timezoneOptions.find((option) => option.value === initialValues.timezone)
             : undefined,
-          subscription_plan: initialValues.subscription_plan
-            ? subscriptionPlanOptions.find((option) => option.value === initialValues.subscription_plan)
-            : undefined,
+          billing_cycle: initialValues.billing_cycle || "monthly",
+          billing_name: initialValues.billing_name || "",
+          billing_email: initialValues.billing_email || "",
+          billing_phone: initialValues.billing_phone || "",
+          billing_address: initialValues.billing_address || "",
+          billing_city: initialValues.billing_city || "",
+          billing_state: initialValues.billing_state || "",
+          billing_pincode: initialValues.billing_pincode || "",
+          billing_country: initialValues.billing_country || "IN",
         };
         hookForm.reset(transformedInitialValues);
       } else {
@@ -119,7 +154,18 @@ const CreateChurchModal: React.FC<CreateChurchModalProps> = ({
         "postal_code",
       ]);
     } else if (currentStepName === "Subscription") {
-      isValid = await trigger(["subscription_plan", "subscription_expiry"]);
+      isValid = await trigger(["plan_id", "billing_cycle"]);
+    } else if (currentStepName === "Billing Info") {
+      isValid = await trigger([
+        "billing_name",
+        "billing_email",
+        "billing_phone",
+        "billing_address",
+        "billing_city",
+        "billing_state",
+        "billing_pincode",
+        "billing_country",
+      ]);
     }
     // No validation needed for the last step before moving to next (it's the submit step)
 
@@ -342,25 +388,178 @@ const CreateChurchModal: React.FC<CreateChurchModalProps> = ({
 
           {currentStep === steps.indexOf("Subscription") && (
             <div className="step-content">
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <InputDropDown
-                    hookForm={hookForm}
-                    field="subscription_plan"
-                    label="Subscription Plan"
-                    labelMandatory
-                    errorText={errors.subscription_plan?.message}
-                    placeholder="Select plan"
-                    options={subscriptionPlanOptions}
-                  />
+              <div className="billing-cycle-selector mb-4">
+                <label className="form-control-label">Billing Cycle *</label>
+                <div className="billing-cycle-buttons">
+                  <button
+                    type="button"
+                    className={`billing-cycle-btn ${hookForm.watch("billing_cycle") === "monthly" ? "active" : ""}`}
+                    onClick={() => hookForm.setValue("billing_cycle", "monthly")}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    type="button"
+                    className={`billing-cycle-btn ${hookForm.watch("billing_cycle") === "yearly" ? "active" : ""}`}
+                    onClick={() => hookForm.setValue("billing_cycle", "yearly")}
+                  >
+                    Yearly
+                  </button>
                 </div>
-                <div className="col-md-6">
+              </div>
+
+              <div className="plans-grid">
+                {subscriptionPlans
+                  .filter((plan) => plan.billing_cycle === hookForm.watch("billing_cycle"))
+                  .map((plan) => (
+                    <div
+                      key={plan.plan_id}
+                      className={`plan-card ${selectedPlan?.plan_id === plan.plan_id ? "selected" : ""}`}
+                      onClick={() => {
+                        setSelectedPlan(plan);
+                        hookForm.setValue("plan_id", Number(plan.plan_id));
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {selectedPlan?.plan_id === plan.plan_id && (
+                        <div className="plan-selected-badge">✓ Selected</div>
+                      )}
+
+                      <div className="plan-header">
+                        <div className="plan-info">
+                          <h4>{plan.plan_name}</h4>
+                          <div className="plan-price">
+                            <span className="currency">{plan.currency === "INR" ? "₹" : "$"}</span>
+                            <span className="amount">{plan.amount}</span>
+                            <span className="period">/{hookForm.watch("billing_cycle") === "monthly" ? "mo" : "yr"}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="plan-features">
+                        {plan.max_parishioners && (
+                          <div className="plan-feature">
+                            Up to {plan.max_parishioners.toLocaleString()} parishioners
+                          </div>
+                        )}
+                        {plan.max_families && (
+                          <div className="plan-feature">
+                            Up to {plan.max_families.toLocaleString()} families
+                          </div>
+                        )}
+                        {plan.trial_period_days && (
+                          <div className="plan-feature">
+                            {plan.trial_period_days} days free trial
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+              <div className="row g-3 mt-3">
+                <div className="col-md-12">
                   <InputDatePicker
                     hookForm={hookForm}
                     field="subscription_expiry"
                     label="Subscription Expiry"
-                    labelMandatory
                     placeholder="dd-mm-yyyy"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === steps.indexOf("Billing Info") && (
+            <div className="step-content">
+              <div className="row g-3">
+                <div className="col-md-12">
+                  <InputText
+                    hookForm={hookForm}
+                    field="billing_name"
+                    label="Billing Name"
+                    labelMandatory
+                    errorText={errors.billing_name?.message}
+                    placeholder="St. Mary Parish"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <InputText
+                    hookForm={hookForm}
+                    field="billing_email"
+                    label="Billing Email"
+                    labelMandatory
+                    errorText={errors.billing_email?.message}
+                    placeholder="billing@stmary.org"
+                    type="email"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <InputPhone
+                    hookForm={hookForm}
+                    field="billing_phone"
+                    label="Billing Phone"
+                    labelMandatory
+                    errorText={errors.billing_phone?.message}
+                    placeholder="9876543210"
+                  />
+                </div>
+
+                <div className="col-md-12">
+                  <InputText
+                    hookForm={hookForm}
+                    field="billing_address"
+                    label="Billing Address"
+                    labelMandatory
+                    errorText={errors.billing_address?.message}
+                    placeholder="123 Church Street, Suite 100"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <InputText
+                    hookForm={hookForm}
+                    field="billing_city"
+                    label="City"
+                    labelMandatory
+                    errorText={errors.billing_city?.message}
+                    placeholder="Mumbai"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <InputText
+                    hookForm={hookForm}
+                    field="billing_state"
+                    label="State"
+                    labelMandatory
+                    errorText={errors.billing_state?.message}
+                    placeholder="Maharashtra"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <InputText
+                    hookForm={hookForm}
+                    field="billing_pincode"
+                    label="Pincode"
+                    labelMandatory
+                    errorText={errors.billing_pincode?.message}
+                    placeholder="400001"
+                  />
+                </div>
+
+                <div className="col-md-6">
+                  <InputText
+                    hookForm={hookForm}
+                    field="billing_country"
+                    disabled={true}
+                    label="Country"
+                    labelMandatory
+                    errorText={errors.billing_country?.message}
+                    placeholder="IN"
                   />
                 </div>
               </div>

@@ -35,3 +35,13 @@ export async function deleteParish(parishId: string) {
     throw handleErrors(err);
   }
 }
+
+export async function manualActivateParish(parishId: string) {
+  try {
+    const url = `${API_ENDPOINTS.PARISH.DETAILS(parishId)}/manual-activate`;
+    const response = await httpPost<ParishRes>(url, {});
+    return response.data;
+  } catch (err) {
+    throw handleErrors(err);
+  }
+}

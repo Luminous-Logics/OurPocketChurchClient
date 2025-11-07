@@ -89,6 +89,7 @@ export default function RegisterComp() {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrationResponse, setRegistrationResponse] = useState<any>(null);
+  const [useSameEmail, setUseSameEmail] = useState(false);
 
   const hookForm = useForm<RegistrationFormType>({
     resolver: zodResolver(parishRegistrationSchema),
@@ -100,9 +101,19 @@ export default function RegisterComp() {
 
   const { handleSubmit, watch, setValue, trigger } = hookForm;
 
+  // Watch parish email for syncing with admin email
+  const parishEmail = watch("email");
+
   useEffect(() => {
   setValue("billing_country","IN")
   }, [ ])
+
+  // Handle checkbox change for using same email
+  useEffect(() => {
+    if (useSameEmail && parishEmail) {
+      setValue("admin_email", parishEmail);
+    }
+  }, [useSameEmail, parishEmail, setValue])
   
 
   // Watch billing cycle for plan selection
@@ -390,6 +401,25 @@ export default function RegisterComp() {
         </div>
 
         <div className="col-md-12">
+          <div className="mb-3">
+            <label className="form-check-label d-flex align-items-center" style={{ cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                className="form-check-input me-2"
+                checked={useSameEmail}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  setUseSameEmail(isChecked);
+                  if (!isChecked) {
+                    setValue("admin_email", "");
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              />
+              <span>Use same email as church email</span>
+            </label>
+          </div>
+
           <InputText
             hookForm={hookForm}
             field="admin_email"
@@ -397,6 +427,7 @@ export default function RegisterComp() {
             labelMandatory
             placeholder="admin@stmary.org"
             type="email"
+            disabled={useSameEmail}
           />
         </div>
 
@@ -616,6 +647,7 @@ export default function RegisterComp() {
           <InputText
             hookForm={hookForm}
             field="billing_country"
+            disabled={true}
             label="Country"
             labelMandatory
             placeholder="IN"

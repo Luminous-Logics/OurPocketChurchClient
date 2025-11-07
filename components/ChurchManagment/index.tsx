@@ -7,12 +7,12 @@ import { RootState } from "@/store";
 import toaster from "@/lib/toastify";
 import StoreProvider from "@/store/provider";
 import { CreateChurchRequestBody } from "./Schema";
-import { Edit2, Plus, Trash2, Church as ChurchIcon, CheckCircle2, Clock, Users, Filter } from "lucide-react";
+import { Edit2, Plus, Trash2, Church as ChurchIcon, CheckCircle2, Clock, Users, Filter, CheckCheck } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { fetchParishesList } from "@/store/slices/church";
 import CreateChurchModal from "../Modal/CreateChurchModal";
 import ConfirmationModal from "../Modal/ConfirmationModal";
-import { createParish, updateParish, deleteParish } from "@/lib/actions/church";
+import { createParish, updateParish, deleteParish, manualActivateParish } from "@/lib/actions/church";
 interface ModalState {
   isOpen: boolean;
   mode: "create" | "edit";
@@ -69,11 +69,13 @@ const ParishRow = React.memo(
     onEdit,
     canEditParishes,
     onDelete,
+    onManualActivate,
   }: {
     parish: any;
     isSuperAdmin: boolean;
     onEdit: (parish: CreateChurchRequestBody) => void;
     onDelete: (parishId: string) => void;
+    onManualActivate: (parishId: string) => void;
     canEditParishes: boolean;
   }) => (
     <tr>
@@ -105,6 +107,16 @@ const ParishRow = React.memo(
       </td>
       <td>
         <div className="action-buttons">
+          {isSuperAdmin && !parish.is_active && (
+            <button
+              className="action-button icon-button activate-button"
+              onClick={() => onManualActivate(parish.parish_id)}
+              aria-label="Manually activate parish"
+              title="Manual Activate"
+            >
+              <CheckCheck size={16} />
+            </button>
+          )}
           {canEditParishes && (
    <button
             className="action-button icon-button edit-button"
@@ -323,7 +335,7 @@ const ChurchComp = () => {
         const transformedData = {
           ...data,
           timezone: data.timezone?.value || "UTC",
-          subscription_plan: data.subscription_plan?.value || "",
+          payment_method: "cash",
         };
 
         if (modalState.mode === "edit" && modalState.data?.parish_id) {
@@ -380,6 +392,16 @@ const ChurchComp = () => {
   const handleStatusFilterChange = useCallback((value: string) => {
     setStatusFilter(value);
   }, []);
+
+  const handleManualActivate = useCallback(async (parishId: string) => {
+    try {
+      await manualActivateParish(parishId);
+      toaster.success("Parish activated successfully");
+      dispatch(fetchParishesList());
+    } catch (error: any) {
+      toaster.error(error.message || "Failed to activate parish");
+    }
+  }, [dispatch]);
 
   // Fetch parishes on mount
   useEffect(() => {
@@ -462,6 +484,7 @@ const ChurchComp = () => {
                   isSuperAdmin={isSuperAdmin}
                   onEdit={handleOpenEditModal}
                   onDelete={handleOpenDeleteConfirmation}
+                  onManualActivate={handleManualActivate}
                   canEditParishes={canEditParishes || false}
                 />
               ))}
