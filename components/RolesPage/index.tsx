@@ -242,7 +242,7 @@ const RolesPageComp = () => {
   return (
     <div className="roles-page">
       <div className="roles-header">
-        <div className="header-left">
+        <div className="header-content">
           <h1>Roles & Permissions</h1>
           <p>Manage user roles and permissions across communities, events, and classes</p>
         </div>

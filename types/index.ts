@@ -89,6 +89,99 @@ export interface RegisterData {
   parish_id: number;
 }
 
+/**
+ * Parish registration data (complete multi-step form)
+ */
+export interface ParishRegistrationData {
+  // Parish Information (Step 1)
+  parish_name: string;
+  diocese: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  country: string;
+  postal_code: string;
+  phone: string;
+  email: string;
+  website_url?: string;
+  established_date?: string;
+  patron_saint?: string;
+  timezone: string;
+
+  // Administrator Details (Step 2)
+  admin_email: string;
+  admin_password: string;
+  admin_first_name: string;
+  admin_last_name: string;
+  admin_phone: string;
+  admin_role?: string;
+  admin_department?: string;
+
+  // Plan Selection (Step 3)
+  plan_id: number;
+  billing_cycle: "monthly" | "yearly";
+
+  // Billing Information (Step 4)
+  billing_name: string;
+  billing_email: string;
+  billing_phone: string;
+  billing_address: string;
+  billing_city: string;
+  billing_state: string;
+  billing_pincode: string;
+  billing_country: string;
+}
+
+/**
+ * Subscription plan data
+ */
+export interface SubscriptionPlan {
+  plan_id: number;
+  plan_name: string;
+  tier: "basic" | "standard" | "premium";
+  amount: number;
+  currency: string;
+  billing_cycle: "monthly" | "yearly";
+  max_parishioners?: number;
+  max_families?: number;
+  trial_period_days?: number;
+  features?: string[];
+  is_active: boolean;
+}
+
+/**
+ * Subscription plans list response
+ */
+export interface SubscriptionPlansResponse {
+  success: boolean;
+  data: SubscriptionPlan[];
+}
+
+/**
+ * Parish registration response with Razorpay details
+ */
+export interface ParishRegistrationResponse {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    expires_in?: number;
+    expires_at: string;
+    user: {
+      user_id: number;
+      email: string;
+      first_name: string;
+      last_name: string;
+      user_type: string;
+    };
+    razorpay_subscription_id: string;
+    razorpay_key_id: string;
+    parish_id: number;
+    parish_name: string;
+  };
+}
+
 // ============================================
 // PARISH MANAGEMENT SPECIFIC TYPES
 // ============================================

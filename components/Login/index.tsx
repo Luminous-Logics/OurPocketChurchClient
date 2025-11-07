@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import * as z from "zod";
 import Link from "next/link";
 import toaster from "@/lib/toastify";
@@ -11,6 +11,7 @@ import InputText from "../InputComponents/InputText";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { loginAction } from "@/lib/actions/auth";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 // Validation schema
 const loginSchema = z.object({
@@ -26,30 +27,57 @@ type LoginFormType = z.infer<typeof loginSchema>;
 export default function LoginComp() {
   const router = useRouter();
   const [currentFeature, setCurrentFeature] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const hookForm = useForm<LoginFormType>({
     resolver: zodResolver(loginSchema),
+    mode: "onBlur",
   });
 
-  const { handleSubmit } = hookForm;
+  const { handleSubmit, setFocus } = hookForm;
+
+  // Auto-focus email field on mount
+  useEffect(() => {
+    setFocus("email");
+  }, [setFocus]);
 
   const loginHandler = async (data: LoginFormType) => {
     try {
+      setIsLoading(true);
       const resp = await loginAction(data);
       if (resp.success) {
-        // Success - user is logged in
-        toaster.success("Login Successful!");
+        toaster.success("Welcome back! Redirecting to dashboard...");
+
+        // Store remember me preference
+        if (rememberMe) {
+          localStorage.setItem("rememberEmail", data.email);
+        } else {
+          localStorage.removeItem("rememberEmail");
+        }
+
         console.log("Logged in user:", resp.data?.user);
-        router.push("/dashboard");
+        setTimeout(() => router.push("/dashboard"), 500);
       } else {
-        // Error - show error message
-        toaster.error(resp.message || "Login Failed");
+        toaster.error(resp.message || "Invalid email or password. Please try again.");
+        setIsLoading(false);
       }
     } catch (err) {
       console.error(err);
-      toaster.error("Something went wrong");
+      toaster.error("Unable to connect. Please check your internet and try again.");
+      setIsLoading(false);
     }
   };
+
+  // Load remembered email on mount
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem("rememberEmail");
+    if (rememberedEmail) {
+      hookForm.setValue("email", rememberedEmail);
+      setRememberMe(true);
+    }
+  }, [hookForm]);
 
   const features = [
     {
@@ -115,13 +143,22 @@ export default function LoginComp() {
               <h2 className="feature-title">{features[currentFeature].title}</h2>
               <p className="feature-description">{features[currentFeature].description}</p>
 
-              <div className="feature-indicators">
-                {features.map((_, idx) => (
+              <div className="feature-indicators" role="tablist" aria-label="Feature navigation">
+                {features.map((feature, idx) => (
                   <button
                     key={idx}
                     className={`indicator ${idx === currentFeature ? 'active' : ''}`}
                     onClick={() => setCurrentFeature(idx)}
-                    aria-label={`Feature ${idx + 1}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setCurrentFeature(idx);
+                      }
+                    }}
+                    role="tab"
+                    aria-label={`${feature.title}`}
+                    aria-selected={idx === currentFeature}
+                    tabIndex={idx === currentFeature ? 0 : -1}
                   />
                 ))}
               </div>
@@ -138,7 +175,7 @@ export default function LoginComp() {
           <div className="loginForm">
             <div className="form-header">
               <h2>Welcome Back</h2>
-              <p>Sign in to continue to Our Pocket Church</p>
+              <p>Sign in to access your Parish Dashboard</p>
             </div>
 
             <form onSubmit={handleSubmit(loginHandler)}>
@@ -147,22 +184,44 @@ export default function LoginComp() {
                 <InputText
                   hookForm={hookForm}
                   field="email"
-                  label="Email"
+                  label="Email Address"
                   labelMandatory
-                  errorText="Please enter a valid email"
+                  placeholder="your@email.com"
+                  type="email"
+                  autoComplete="email"
+                  disabled={isLoading}
+                  aria-label="Email address"
                 />
               </div>
 
-              {/* Password */}
+              {/* Password with Toggle */}
               <div className="form-group">
-                <InputText
-                  hookForm={hookForm}
-                  field="password"
-                  label="Password"
-                  labelMandatory
-                  errorText="Password is required"
-                  type="password"
-                />
+                <label className="form-control-label">
+                  Password
+                  <span className="text-danger">*</span>
+                </label>
+                <div className="password-input-wrapper">
+                  <InputText
+                    hookForm={hookForm}
+                    field="password"
+                    label=""
+                    labelMandatory={false}
+                    placeholder="Enter your password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    disabled={isLoading}
+                    aria-label="Password"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    tabIndex={0}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <div className="form-group d-flex justify-content-between align-items-center">
@@ -172,20 +231,41 @@ export default function LoginComp() {
                       className="form-check-input"
                       type="checkbox"
                       id="rememberme"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      disabled={isLoading}
+                      aria-label="Remember my email"
                     />
                     <label className="form-check-label" htmlFor="rememberme">
                       Remember Me
                     </label>
                   </div>
                 </div>
-                <Link href="/forgot-password" className="forgotpwd">
+                <Link
+                  href="/forgot-password"
+                  className="forgotpwd"
+                  tabIndex={0}
+                  aria-label="Forgot your password?"
+                >
                   Forgot Password?
                 </Link>
               </div>
 
               <div className="form-group">
-                <button className="btn btn-login" type="submit">
-                  Sign In
+                <button
+                  className="btn btn-login"
+                  type="submit"
+                  disabled={isLoading}
+                  aria-label={isLoading ? "Signing in..." : "Sign in to your account"}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="spinner-icon" size={18} />
+                      Signing In...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
                 </button>
               </div>
             </form>
@@ -195,16 +275,32 @@ export default function LoginComp() {
             </div>
 
             <p className="newuser">
-              Don't have an account?
+              New to Our Pocket Church?{" "}
               <a
                 role="button"
-                onClick={() => router.push("/register")}
+                onClick={() => !isLoading && router.push("/register")}
                 className="btn_register"
-                style={{ cursor: "pointer" }}
+                style={{ cursor: isLoading ? "not-allowed" : "pointer" }}
+                aria-label="Create a new account"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && !isLoading) {
+                    e.preventDefault();
+                    router.push("/register");
+                  }
+                }}
               >
                 Create Account
               </a>
             </p>
+
+            {/* Security Badge */}
+            <div className="security-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              <span>Your data is secure and encrypted</span>
+            </div>
           </div>
         </div>
       </div>

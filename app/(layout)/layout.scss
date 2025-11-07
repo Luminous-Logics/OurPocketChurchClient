@@ -10,6 +10,7 @@
   min-height: 100vh;
   overflow-x: hidden;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 32px;
 
   .sidebar.collapsed ~ & {
     margin-left: 72px;
@@ -19,6 +20,7 @@
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0 !important;
-    padding-top: 60px;
+    padding: 20px;
+    padding-top: 80px;
   }
 }

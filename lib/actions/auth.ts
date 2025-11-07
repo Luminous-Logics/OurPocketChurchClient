@@ -3,7 +3,7 @@
 
 import { redirect } from "next/navigation";
 import { API_ENDPOINTS } from "@/config/api";
-import { LoginData, RegisterData, AuthResponse } from "@/types";
+import { LoginData, RegisterData, AuthResponse, ParishRegistrationData } from "@/types";
 import { setAccessToken, clearToken } from "../cookies";
 import { httpPost } from "../api/server";
 
@@ -64,4 +64,36 @@ export async function clearTokenAction() {
 export async function logoutAction() {
   clearToken();
   redirect("/login");
+}
+
+// Parish Registration - Server Action
+export async function parishRegisterAction(data: ParishRegistrationData) {
+  try {
+    const response = await httpPost<AuthResponse>(
+      API_ENDPOINTS.AUTH.PARISH_REGISTER,
+      data
+    );
+
+    if (response.success && response.data) {
+      const { token, expires_in } = response.data;
+      setAccessToken(token, expires_in);
+
+      return {
+        success: true,
+        data: response.data,
+        message: "Parish registration successful",
+      };
+    }
+
+    return {
+      success: false,
+      message: response.message || "Parish registration failed",
+    };
+  } catch (error) {
+    console.error("Parish registration error:", error);
+    return {
+      success: false,
+      message: "Parish registration failed. Please try again.",
+    };
+  }
 }

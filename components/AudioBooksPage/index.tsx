@@ -11,7 +11,7 @@ import { promiseTracker } from "@/lib/api";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import toaster from "@/lib/toastify";
 import StoreProvider from "@/store/provider";
-import { Plus, Search, BookOpen, Edit2, Trash2 } from "lucide-react";
+import { Plus, BookOpen, Edit2, Trash2, Filter, Info } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import AddAudiobookModal, {
@@ -273,14 +273,23 @@ const AudioBooksPageComp = () => {
     <div className="audiobooks-page-content">
       {/* Page Header */}
       <div className="page-header">
-        <div>
+        <div className="header-content">
           <h1>Audio Book Library</h1>
-          <p>Listen to spiritual books selected by the parish</p>
-          <p className="stats-text">
-            {debouncedSearchQuery
-              ? `${filteredAudiobooks.length} search results`
-              : `${totalRecords} total audiobooks`}
-          </p>
+          <div className="subtitle-with-info">
+            <p>
+              Listen to spiritual books selected by the parish (
+              {debouncedSearchQuery
+                ? `${filteredAudiobooks.length} search results`
+                : `${totalRecords} total audiobooks`}
+              )
+            </p>
+            <div
+              className="info-tooltip"
+              title="Audiobooks provide spiritual nourishment through literature, available anytime for parish members"
+            >
+              <Info size={16} />
+            </div>
+          </div>
         </div>
         {canManageAudiobooks && (
           <Button
@@ -295,24 +304,35 @@ const AudioBooksPageComp = () => {
 
       {/* Search and Filter */}
       <div className="audiobooks-controls-wrapper">
-        <div className="audiobooks-controls">
-          <div className="search-box">
-            <Search size={18} />
-            <input
-              type="text"
-              placeholder="Search audio books..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="search-input"
+        <div className="search-input-wrapper">
+          <svg
+            className="search-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
-            {isSearching && (
-              <span className="search-loading">Searching...</span>
-            )}
-          </div>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search by title, author, or category..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+          {isSearching && <span className="search-loading">Searching...</span>}
+        </div>
+        <div className="filter-controls">
+          <Filter size={18} className="filter-icon" />
           <select
-            className="language-filter-button"
+            className="filter-select"
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
+            aria-label="Filter by language"
           >
             <option value="all">All Languages</option>
             {languages.map((language) => (
@@ -334,9 +354,10 @@ const AudioBooksPageComp = () => {
       {/* Audiobooks Grid */}
       {!isLoading && (
         <>
-          <div className="audiobooks-grid">
+          <div className="row g-4">
             {filteredAudiobooks.map((audiobook) => (
-              <Card key={audiobook.audiobook_id} className="audiobook-card">
+              <div key={audiobook.audiobook_id} className="col-md-6 col-lg-6">
+                <Card className="audiobook-card">
                 <div className="audiobook-card-content">
                   <div className="audiobook-icon">
                     <BookOpen size={32} />
@@ -412,6 +433,7 @@ const AudioBooksPageComp = () => {
                   )}
                 </div>
               </Card>
+            </div>
             ))}
           </div>
 

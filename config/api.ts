@@ -2,8 +2,14 @@
 const AUTH = {
   AUTH_LOGIN: "/auth/login",
   REGISTER: "/auth/register",
+  PARISH_REGISTER: "/parishes",
   GENERATE_REFRESH_TOKEN: "/auth/refresh-token",
   PROFILE: "/auth/profile",
+};
+
+const SUBSCRIPTIONS = {
+  PLANS: "/subscriptions/plans",
+  VERIFY_PAYMENT: "/subscriptions/verify-payment",
 };
 
 const ROLES = {
@@ -110,6 +116,7 @@ const USERS = {
 
 export const API_ENDPOINTS = {
   AUTH,
+  SUBSCRIPTIONS,
   ROLES,
   FAMILIES,
   PRAYER_REQUESTS,

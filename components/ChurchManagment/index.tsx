@@ -7,7 +7,7 @@ import { RootState } from "@/store";
 import toaster from "@/lib/toastify";
 import StoreProvider from "@/store/provider";
 import { CreateChurchRequestBody } from "./Schema";
-import { Edit2, Plus, Trash2 } from "lucide-react";
+import { Edit2, Plus, Trash2, Church as ChurchIcon, CheckCircle2, Clock, Users, Filter } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { fetchParishesList } from "@/store/slices/church";
 import CreateChurchModal from "../Modal/CreateChurchModal";
@@ -30,15 +30,35 @@ interface StatItem {
   label: string;
   value: number;
   color: string;
+  iconType: 'church' | 'active' | 'pending' | 'users';
+  iconBg: string;
 }
 
 // Extracted Stats Card Component
-const StatCard = React.memo(({ stat }: { stat: StatItem }) => (
-  <div className="stat-card">
-    <p>{stat.label}</p>
-    <p className={`stat-value ${stat.color}`}>{stat.value}</p>
-  </div>
-));
+const StatCard = React.memo(({ stat }: { stat: StatItem }) => {
+  const getIcon = () => {
+    const iconMap = {
+      church: ChurchIcon,
+      active: CheckCircle2,
+      pending: Clock,
+      users: Users,
+    };
+    const IconComponent = iconMap[stat.iconType];
+    return React.createElement(IconComponent, { size: 20 });
+  };
+
+  return (
+    <div className="stat-card">
+      <div className="stat-card-header">
+        <div className={`stat-icon ${stat.iconBg}`}>
+          {getIcon()}
+        </div>
+        <p className="stat-label">{stat.label}</p>
+      </div>
+      <p className={`stat-value ${stat.color}`}>{stat.value.toLocaleString()}</p>
+    </div>
+  );
+});
 StatCard.displayName = "StatCard";
 
 // Extracted Table Row Component
@@ -47,12 +67,14 @@ const ParishRow = React.memo(
     parish,
     isSuperAdmin,
     onEdit,
+    canEditParishes,
     onDelete,
   }: {
     parish: any;
     isSuperAdmin: boolean;
     onEdit: (parish: CreateChurchRequestBody) => void;
     onDelete: (parishId: string) => void;
+    canEditParishes: boolean;
   }) => (
     <tr>
       <td>{parish.parish_name}</td>
@@ -83,13 +105,15 @@ const ParishRow = React.memo(
       </td>
       <td>
         <div className="action-buttons">
-          <button
+          {canEditParishes && (
+   <button
             className="action-button icon-button edit-button"
             onClick={() => onEdit(parish)}
             aria-label="Edit parish"
           >
             <Edit2 size={16} />
           </button>
+          )}
           {isSuperAdmin && (
             <button
               className="action-button icon-button delete-button"
@@ -106,14 +130,19 @@ const ParishRow = React.memo(
 );
 ParishRow.displayName = "ParishRow";
 
-// Extracted Search Bar Component
+
+// Extracted Search Bar Component with Filters
 const SearchBar = React.memo(
   ({
     value,
     onChange,
+    statusFilter,
+    onStatusChange,
   }: {
     value: string;
     onChange: (value: string) => void;
+    statusFilter: string;
+    onStatusChange: (value: string) => void;
   }) => (
     <div className="search-bar">
       <div className="search-input-wrapper">
@@ -136,6 +165,19 @@ const SearchBar = React.memo(
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
+      </div>
+      <div className="filter-controls">
+        <Filter size={18} className="filter-icon" />
+        <select
+          className="filter-select"
+          value={statusFilter}
+          onChange={(e) => onStatusChange(e.target.value)}
+          aria-label="Filter by status"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="pending">Pending</option>
+        </select>
       </div>
     </div>
   )
@@ -162,6 +204,7 @@ const ChurchComp = () => {
 
   const [isLoadingParishList, setIsLoadingParishList] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   // Memoized user role check
   const isSuperAdmin = useMemo(
@@ -177,35 +220,77 @@ const ChurchComp = () => {
     [userProfile?.permissions]
   );
 
+   const canEditParishes = useMemo(
+    () => userProfile?.permissions?.some(
+      (permission: any) => permission.permission_code === "EDIT_PARISH"
+    ),
+    [userProfile?.permissions]
+  );
+
+
   // Memoized stats calculation
   const stats = useMemo<StatItem[]>(() => {
     const total = parishesList?.length || 0;
     const active = parishesList?.filter((p) => p.is_active)?.length || 0;
 
     return [
-      { label: "Total Parishes", value: total, color: "text-gray-800" },
-      { label: "Active", value: active, color: "text-blue-600" },
+      {
+        label: "Total Parishes",
+        value: total,
+        color: "text-blue-600",
+        iconType: 'church' as const,
+        iconBg: "icon-bg-blue"
+      },
+      {
+        label: "Active",
+        value: active,
+        color: "text-green-600",
+        iconType: 'active' as const,
+        iconBg: "icon-bg-green"
+      },
       {
         label: "Pending Approval",
         value: total - active,
-        color: "text-yellow-600",
+        color: "text-amber-600",
+        iconType: 'pending' as const,
+        iconBg: "icon-bg-amber"
       },
-      { label: "Total Subscribers", value: total, color: "text-gray-800" },
+      {
+        label: "Total Subscribers",
+        value: total,
+        color: "text-violet-600",
+        iconType: 'users' as const,
+        iconBg: "icon-bg-violet"
+      },
     ];
   }, [parishesList]);
 
   // Memoized filtered parishes
   const filteredParishes = useMemo(() => {
-    if (!searchQuery.trim()) return parishesList;
+    let filtered = parishesList || [];
 
-    const query = searchQuery.toLowerCase();
-    return parishesList?.filter(
-      (parish) =>
-        parish.parish_name?.toLowerCase().includes(query) ||
-        parish.diocese?.toLowerCase().includes(query) ||
-        parish.city?.toLowerCase().includes(query)
-    );
-  }, [parishesList, searchQuery]);
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (parish) =>
+          parish.parish_name?.toLowerCase().includes(query) ||
+          parish.diocese?.toLowerCase().includes(query) ||
+          parish.city?.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by status
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((parish) => {
+        if (statusFilter === "active") return parish.is_active;
+        if (statusFilter === "pending") return !parish.is_active;
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [parishesList, searchQuery, statusFilter]);
 
   // Memoized callbacks
   const handleOpenCreateModal = useCallback(() => {
@@ -292,6 +377,10 @@ const ChurchComp = () => {
     setSearchQuery(value);
   }, []);
 
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setStatusFilter(value);
+  }, []);
+
   // Fetch parishes on mount
   useEffect(() => {
     const fetchParishList = async () => {
@@ -340,7 +429,12 @@ const ChurchComp = () => {
       </div>
 
       {/* Search Bar */}
-      <SearchBar value={searchQuery} onChange={handleSearchChange} />
+      <SearchBar
+        value={searchQuery}
+        onChange={handleSearchChange}
+        statusFilter={statusFilter}
+        onStatusChange={handleStatusFilterChange}
+      />
 
       {/* Table */}
       <div className="table-container">
@@ -368,6 +462,7 @@ const ChurchComp = () => {
                   isSuperAdmin={isSuperAdmin}
                   onEdit={handleOpenEditModal}
                   onDelete={handleOpenDeleteConfirmation}
+                  canEditParishes={canEditParishes || false}
                 />
               ))}
             </tbody>

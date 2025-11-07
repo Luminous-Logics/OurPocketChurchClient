@@ -11,7 +11,7 @@ import { promiseTracker } from "@/lib/api";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import toaster from "@/lib/toastify";
 import StoreProvider from "@/store/provider";
-import { Plus, Search, Users, User, Phone } from "lucide-react";
+import { Plus, Users, User, Phone, Filter, Info } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import CreateFamilyModal, {
@@ -216,15 +216,23 @@ const FamiliesPageComp = () => {
     <div className="families-page-content">
       {/* Page Header */}
       <div className="page-header">
-        <div>
+        <div className="header-content">
           <h1>Families</h1>
-          <p>
-            Manage parish families grouped by wards (
-            {debouncedSearchQuery
-              ? `${filteredFamilies.length} search results`
-              : `${totalRecords} total families`}
-            )
-          </p>
+          <div className="subtitle-with-info">
+            <p>
+              Manage parish families grouped by wards (
+              {debouncedSearchQuery
+                ? `${filteredFamilies.length} search results`
+                : `${totalRecords} total families`}
+              )
+            </p>
+            <div
+              className="info-tooltip"
+              title="Families are the core units within each ward, representing households of parishioners"
+            >
+              <Info size={16} />
+            </div>
+          </div>
         </div>
         <Button
           variant="primary"
@@ -237,24 +245,35 @@ const FamiliesPageComp = () => {
 
       {/* Search and Filter */}
       <div className="families-controls-wrapper">
-        <div className="families-controls">
-          <div className="search-box">
-            <Search size={18} />
-            <input
-              type="text"
-              placeholder="Search by family name..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="search-input"
+        <div className="search-input-wrapper">
+          <svg
+            className="search-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
-            {isSearching && (
-              <span className="search-loading">Searching...</span>
-            )}
-          </div>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search by family name, head of family, or contact..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+          {isSearching && <span className="search-loading">Searching...</span>}
+        </div>
+        <div className="filter-controls">
+          <Filter size={18} className="filter-icon" />
           <select
-            className="ward-filter-button"
+            className="filter-select"
             value={selectedWard}
             onChange={(e) => setSelectedWard(e.target.value)}
+            aria-label="Filter by ward"
           >
             <option value="all">All Wards</option>
             {wards.map((ward) => (
@@ -276,63 +295,65 @@ const FamiliesPageComp = () => {
       {/* Families Grid */}
       {!isLoading && (
         <>
-          <div className="families-grid">
+          <div className="row g-4">
             {filteredFamilies.map((family) => (
-              <Card key={family.family_id} className="family-card">
-                <div className="family-card-header">
-                  <div className="family-avatar">
-                    <Users size={32} />
-                  </div>
-                  <div className="family-info">
-                    <h3 className="family-name">{family.family_name}</h3>
-                    <p className="family-head">
-                      <User size={14} className="icon-small" />
-                      Head: {family.head_of_family || "N/A"}
-                    </p>
-                  </div>
-                  {family.is_active && <Badge variant="success">Active</Badge>}
-                </div>
-
-                <div className="family-card-body">
-                  {family.home_phone && (
-                    <div className="family-address">
-                      <Phone size={14} />
-                      <span>{family.home_phone}</span>
+              <div key={family.family_id} className="col-md-6 col-lg-6">
+                <Card className="family-card">
+                  <div className="family-card-header">
+                    <div className="family-avatar">
+                      <Users size={32} />
                     </div>
-                  )}
-
-                  <div className="family-ward">
-                    <Badge variant="primary">Ward {family.ward_id}</Badge>
+                    <div className="family-info">
+                      <h3 className="family-name">{family.family_name}</h3>
+                      <p className="family-head">
+                        <User size={14} className="icon-small" />
+                        Head: {family.head_of_family || "N/A"}
+                      </p>
+                    </div>
+                    {family.is_active && <Badge variant="success">Active</Badge>}
                   </div>
 
-                  {family.registration_date && (
-                    <div className="family-detail">
-                      <span className="detail-label">Registered</span>
-                      <span className="detail-value">
-                        {new Date(
-                          family.registration_date
-                        ).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                  <div className="family-card-body">
+                    {family.home_phone && (
+                      <div className="family-address">
+                        <Phone size={14} />
+                        <span>{family.home_phone}</span>
+                      </div>
+                    )}
 
-                <div className="family-card-footer">
-                  <Button
-                    variant="outline"
-                    className="flex-fill"
-                    onClick={() => router.push(`/families/${family.family_id}`)}
-                  >
-                    View & Manage
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleEditFamilyClick(family.family_id)}
-                  >
-                    Edit
-                  </Button>
-                </div>
-              </Card>
+                    <div className="family-ward">
+                      <Badge variant="primary">Ward {family.ward_id}</Badge>
+                    </div>
+
+                    {family.registration_date && (
+                      <div className="family-detail">
+                        <span className="detail-label">Registered</span>
+                        <span className="detail-value">
+                          {new Date(
+                            family.registration_date
+                          ).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="family-card-footer">
+                    <Button
+                      variant="outline"
+                      className="flex-fill"
+                      onClick={() => router.push(`/families/${family.family_id}`)}
+                    >
+                      View & Manage
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleEditFamilyClick(family.family_id)}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                </Card>
+              </div>
             ))}
           </div>
 

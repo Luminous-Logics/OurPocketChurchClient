@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(nul)",
+      "Bash(dir /s /b \"c:\\Users\\Anathapadmanabhan\\Desktop\\client\\app\\api\\auth\\*.ts\")",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(find:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

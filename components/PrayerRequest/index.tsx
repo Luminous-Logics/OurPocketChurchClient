@@ -290,7 +290,7 @@ console.log(canApprovePrayerRequests)
     <div className="prayer-requests-page-content">
       {/* Page Header */}
       <div className="page-header">
-        <div>
+        <div className="header-content">
           <h1>Prayer Requests</h1>
           <p>View and manage prayer requests from parish members</p>
         </div>

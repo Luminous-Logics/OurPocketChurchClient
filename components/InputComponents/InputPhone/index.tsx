@@ -25,20 +25,35 @@ const InputPhone = <T extends FieldValues>({
     formState: { errors },
   } = hookForm;
 
+  const error = errors[field];
+  const errorMessage = (error?.message as string) || errorText;
+  const hasError = isError(errors, field);
+
   return (
-    <div className="form-group">
-      <label className="form-control-label">
+    <div className="input-field-wrapper">
+      <label className="form-control-label" htmlFor={field}>
         {label}
-        <span className="text-danger">{labelMandatory ? "*" : ""}</span>
+        {labelMandatory && <span className="text-danger"> *</span>}
       </label>
       <input
-        type="text"
-        className={`form-control ${isError(errors, field) ? "validate-field" : ""}`}
+        id={field}
+        type="tel"
+        className={`form-control ${hasError ? "validate-field" : ""}`}
         placeholder={placeholder}
+        aria-invalid={hasError}
+        aria-describedby={hasError ? `${field}-error` : undefined}
+        autoComplete="tel"
         {...register(field)}
       />
-      {isError(errors, field) && errorText && (
-        <div className="invalid-feedback">{errorText}</div>
+      {hasError && errorMessage && (
+        <div
+          id={`${field}-error`}
+          className="field-error-message"
+          role="alert"
+          aria-live="polite"
+        >
+          {errorMessage}
+        </div>
       )}
     </div>
   );

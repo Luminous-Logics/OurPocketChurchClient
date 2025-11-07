@@ -1,4 +1,5 @@
 import Sidebar from "@/components/Sidebar";
+import Breadcrumb from "@/components/Breadcrumb";
 import "./layout.scss";
 import {
   LayoutGrid,
@@ -167,7 +168,10 @@ export default function DashboardLayout({
   return (
     <div className="dashboard-layout">
       <Sidebar items={navigationItems} logo="P" logoText="Our Pocket Parish" />
-      <main className="main-content">{children}</main>
+      <main className="main-content">
+        <Breadcrumb />
+        {children}
+      </main>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import toaster from "@/lib/toastify";
 import { httpServerGet, promiseTracker } from "@/lib/api";
 import { createSlice, Dispatch, PayloadAction } from "@reduxjs/toolkit";

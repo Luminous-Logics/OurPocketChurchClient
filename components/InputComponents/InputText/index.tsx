@@ -50,23 +50,33 @@ const InputText = <T extends FieldValues>({
     }
   };
 
+  const error = errors[field];
+  const errorMessage = error?.message as string;
+  const hasError = isError(errors, field);
+
   return (
-    <>
-      <label className="me-2 form-control-label infoLabel">
-        {label}
-        <span className="text-danger">{labelMandatory ? "*" : ""}</span>
-        {showInfoIcon && infoText && (
-          <div className="infolabelText">
-            <i className="icon icon-info" />
-            <span>{infoText}</span>
-          </div>
-        )}
-      </label>
+    <div className="input-field-wrapper">
+      {label && (
+        <label
+          className="form-control-label"
+          htmlFor={field}
+        >
+          {label}
+          {labelMandatory && <span className="text-danger"> *</span>}
+          {showInfoIcon && infoText && (
+            <div className="infolabelText">
+              <i className="icon icon-info" />
+              <span>{infoText}</span>
+            </div>
+          )}
+        </label>
+      )}
 
       <input
-        className={`form-control ${
-          isError(errors, field) ? "validate-field" : ""
-        }`}
+        id={field}
+        className={`form-control ${hasError ? "validate-field" : ""}`}
+        aria-invalid={hasError}
+        aria-describedby={hasError ? `${field}-error` : undefined}
         {...props}
         {...register(field, {
           onChange: (e) => {
@@ -82,7 +92,18 @@ const InputText = <T extends FieldValues>({
         })}
         onBlur={props.onBlur}
       />
-    </>
+
+      {hasError && errorMessage && (
+        <div
+          id={`${field}-error`}
+          className="field-error-message"
+          role="alert"
+          aria-live="polite"
+        >
+          {errorMessage}
+        </div>
+      )}
+    </div>
   );
 };
 
