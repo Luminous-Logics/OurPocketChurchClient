@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useState, useEffect } from "react";
@@ -57,7 +58,9 @@ const parishRegistrationSchema = z.object({
   billing_address: z.string().min(1, "Billing address is required"),
   billing_city: z.string().min(1, "City is required"),
   billing_state: z.string().min(1, "State is required"),
-  billing_pincode: z.string().min(1, "Pincode is required"),
+  billing_pincode: z.string()
+  .min(1, "Pincode is required")
+  .regex(/^\d{6}$/, "Pincode must be exactly 6 digits"),
   billing_country: z.string().min(1, "Country is required"),
 });
 
@@ -96,6 +99,11 @@ export default function RegisterComp() {
   });
 
   const { handleSubmit, watch, setValue, trigger } = hookForm;
+
+  useEffect(() => {
+  setValue("billing_country","IN")
+  }, [ ])
+  
 
   // Watch billing cycle for plan selection
   const billingCycle = watch("billing_cycle");
@@ -184,6 +192,7 @@ export default function RegisterComp() {
       const registrationData = {
         ...data,
         timezone: data.timezone.value,
+        payment_method:"online"
       };
 
       const resp = await parishRegisterAction(registrationData as any);

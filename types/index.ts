@@ -131,6 +131,7 @@ export interface ParishRegistrationData {
   billing_state: string;
   billing_pincode: string;
   billing_country: string;
+  payment_method?: string;
 }
 
 /**

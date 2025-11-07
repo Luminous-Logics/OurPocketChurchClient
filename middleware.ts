@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_ROUTES = ["/login", "/register" ,"/wards"];
+const PUBLIC_ROUTES = ["/login", "/register" ,"/vrTour","/img/1.jpg"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -28,5 +28,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+ matcher: ["/((?!api|_next/static|_next/image|favicon.ico|img).*)"],
 };
